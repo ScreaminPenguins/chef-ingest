@@ -37,6 +37,27 @@
     },
     "Secret": {
       "type": "string"
+    },
+    "InstanceEnv": {
+      "type": "object",
+      "required": ["platform_env"],
+      "properties": {
+        "platform_env": {
+          "type": "string",
+          "enum": ["dev", "prod"]
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": true,
+          "description": "`DataHub Source` configuraion overrides"
+        }
+      }
+    },
+    "PlatformInstance": {
+      "type": ["array", "null"],
+      "items": {
+        "$ref": "#/definitions/InstanceEnv"
+      }
     }
   },
   "properties": {
@@ -76,6 +97,52 @@
             },
             "schemaRegBasicAuth": {
               "$ref": "#/definitions/Secret"
+            }
+          }
+        }
+      }
+    },
+    "crons": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "bigquery": {
+          "type": ["object", "null"],
+          "patternProperties": {
+            "^.*": {
+              "$ref": "#/definitions/PlatformInstance"
+            }
+          }
+        },
+        "kafka": {
+          "type": ["object", "null"],
+          "patternProperties": {
+            "^.*": {
+              "$ref": "#/definitions/PlatformInstance"
+            }
+          }
+        },
+        "kafka_connect": {
+          "type": ["object", "null"],
+          "patternProperties": {
+            "^.*": {
+              "$ref": "#/definitions/PlatformInstance"
+            }
+          }
+        },
+        "mysql": {
+          "type": ["object", "null"],
+          "patternProperties": {
+            "^.*": {
+              "$ref": "#/definitions/PlatformInstance"
+            }
+          }
+        },
+        "postgres": {
+          "type": ["object", "null"],
+          "patternProperties": {
+            "^.*": {
+              "$ref": "#/definitions/PlatformInstance"
             }
           }
         }

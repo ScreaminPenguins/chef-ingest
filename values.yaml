@@ -14,3 +14,10 @@ secrets:
     kafkaSaslUser: ""
     kafkaSaslPswd: ""
     schemaRegBasicAuth: ""
+
+crons:
+  bigquery: {}
+  kafka: {}
+  kafka_connect: {}
+  mysql: {}
+  postgres: {}
