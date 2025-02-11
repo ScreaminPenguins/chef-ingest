@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "definitions": {
+    "GlobalVariables": {
+      "additionalProperties": true,
+      "type": "object",
+      "required": ["imageRegistry", "datahub"],
+      "properties": {
+        "imageRegistry": {
+          "type": "string"
+        },
+        "datahub": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["version"],
+          "properties": {
+            "version": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "Image": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["repository"],
+      "properties": {
+        "repository": {
+          "type": "string"
+        },
+        "pullPolicy": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "global": {
+      "$ref": "#/definitions/GlobalVariables"
+    },
+    "image": {
+      "$ref": "#/definitions/Image"
+    }
+  }
+}

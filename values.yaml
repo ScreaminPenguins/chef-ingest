@@ -1,0 +1,8 @@
+global:
+  imageRegistry: docker.io
+  datahub:
+    version: v.0.14.01
+
+image:
+  repository: acryldata/datahub-ingestion
+  pullPolicy: IfNotPresent
