@@ -6,3 +6,11 @@ global:
 image:
   repository: acryldata/datahub-ingestion
   pullPolicy: IfNotPresent
+
+secrets:
+  ingredients: {}
+  sink:
+    dataHubSink: ""
+    kafkaSaslUser: ""
+    kafkaSaslPswd: ""
+    schemaRegBasicAuth: ""

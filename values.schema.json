@@ -34,6 +34,9 @@
           "type": "string"
         }
       }
+    },
+    "Secret": {
+      "type": "string"
     }
   },
   "properties": {
@@ -42,6 +45,41 @@
     },
     "image": {
       "$ref": "#/definitions/Image"
+    },
+    "secrets": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["ingredients"],
+      "properties": {
+        "ingredients": {
+          "type": "object",
+          "additionalProperties": true,
+          "patternProperties": {
+            "^.*": {
+              "$ref": "#/definitions/Secret"
+            }
+          }
+        },
+        "sink": {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["dataHubSink"],
+          "properties": {
+            "dataHubSink": {
+              "$ref": "#/definitions/Secret"
+            },
+            "kafkaSaslUser": {
+              "$ref": "#/definitions/Secret"
+            },
+            "kafkaSaslPswd": {
+              "$ref": "#/definitions/Secret"
+            },
+            "schemaRegBasicAuth": {
+              "$ref": "#/definitions/Secret"
+            }
+          }
+        }
+      }
     }
   }
 }
