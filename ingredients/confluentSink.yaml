@@ -1,0 +1,17 @@
+datahub_api:
+  server: http://datahub-datahub-gms.datahub.svc.cluster.local:8080
+  token: "${API_TOKEN}"
+
+sink:
+  type: "datahub-kafka"
+  config:
+    connection:
+      bootstrap: "${BOOTSTRAP_SERVER}"
+      consumer_config:
+        security.protocol: "SASL_SSL"
+        sasl.mechanism: "PLAIN"
+        sasl.username: "${KAFKA_SASL_USERNAME}"
+        sasl.password: "${KAFKA_SASL_PASSWORD}"
+      schema_registry_url: "${SCHEMA_REGISTRY_URL}"
+      schema_registry_config:
+        basic.auth.user.info: "${SR_BASIC_USER_AUTH}"
