@@ -1,0 +1,158 @@
+{{- $baseName := include "chef-ingest.fullname" .}}
+{{- $labels := include "chef-ingest.labels" .}}
+{{- $defaultCommand := printf "datahub ingest -c /etc/recipe/%s" "recipe.yaml" }}
+
+{{- range $platform, $platform_instance := .Values.crons }}
+  {{- range $instance, $environments := $platform_instance }}
+    {{- range $env, $configs := $environments }}
+
+      {{- $targetSink := default "datahub-kafka" $configs.sinkType }}
+      {{- $instance_name := printf "%s-%s" $instance $configs.platform_env | replace "_" "-" -}}
+      {{- $config_name := printf "%s-recipe" $instance_name -}}
+
+apiVersion: {{ include "chef-ingest.cronjob.apiVersion" $ }}
+kind: CronJob
+metadata:
+  labels: {{ $labels | nindent 4 }}
+  name: "{{ $baseName }}-{{ $instance_name }}"
+spec:
+  schedule: {{ default "0 0 * * *" .schedule | quote }}
+  concurrencyPolicy: {{ default "Forbid" .concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ default 3 .successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ default 1 .failedJobsHistoryLimit }}
+  suspend: {{ default false .suspend }}
+  jobTemplate:
+    spec:
+      backoffLimit: {{ default 2 .backoffLimit }}
+      template:
+        {{- with .podAnnotations }}
+        metadata:
+          annotations:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+        spec:
+        {{- with $.Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- if .extraInitContainers }}
+          initContainers:
+          {{- toYaml .extraInitContainers | nindent 12 }}
+          {{- end }}
+        {{- if .hostAliases }}
+          hostAliases:
+          {{- toYaml .hostAliases | nindent 12 }}
+        {{- end }}
+        {{- if .serviceAccountName }}
+          serviceAccountName: {{ .serviceAccountName }}
+        {{- end }}
+          securityContext:
+            {{- toYaml $.Values.podSecurityContext | nindent 12 }}
+          containers:
+          - name: {{ $instance_name }}-crawler
+            image: {{ include "chef-ingest.image" (dict "imageRegistry" $.Values.global.imageRegistry "version" $.Values.global.datahub.version "image" $.Values.image) }}
+            imagePullPolicy: {{ $.Values.image.pullPolicy }}
+            volumeMounts:
+              - name: recipe
+                mountPath: /etc/recipe
+            {{- if .extraVolumeMounts }}
+              {{- toYaml .extraVolumeMounts | nindent 14 }}
+            {{- end }}
+            command: ["/bin/sh", "-c", {{ default $defaultCommand .command }}]
+            {{- if .securityContext }}
+            securityContext:
+              {{- toYaml .securityContext | nindent 14 }}
+            {{- end }}
+            env:
+              {{- if .env }}
+              {{- range $key,$value := .env }}
+              - name: {{ $key | quote }}
+                value: {{ $value | quote }}
+              {{- end }}
+              {{- end }}
+
+              {{- if .envFromSecrets }}
+                {{- range $key,$value := .envFromSecrets }}
+              - name: {{ $key | quote }}
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ $value.secret | quote }}
+                    key: {{ $value.key | quote }}
+                {{- end }}
+              {{- end -}}
+
+              {{- $env_secret := default dict .envFromSecrets -}}
+              {{- if not (hasKey $env_secret "API_TOKEN") }}
+              - name: "API_TOKEN"
+                valueFrom:
+                  secretKeyRef:
+                    name: secret-sink
+                    key: dataHubApiToken
+              {{- end }}
+              {{- if eq $targetSink "datahub-kafka" }}
+                {{- if not (hasKey $env_secret "KAFKA_SASL_USER") }}
+              - name: "KAFKA_SASL_USER"
+                valueFrom:
+                  secretKeyRef:
+                    name: secret-sink
+                    key: kafkaSaslUser
+                {{- end }}
+                {{- if not (hasKey $env_secret "KAFKA_SASL_PSWD") }}
+              - name: "KAFKA_SASL_USER"
+                valueFrom:
+                  secretKeyRef:
+                    name: secret-sink
+                    key: kafkaSaslPswd
+                {{- end}}
+                {{- if not (hasKey $env_secret "SR_BASIC_USER_AUTH") }}
+              - name: "SR_BASIC_USER_AUTH"
+                valueFrom:
+                  secretKeyRef:
+                    name: secret-sink
+                    key: schemaRegBasicAuth
+                {{- end }}
+              {{- end }}
+
+              {{- if eq $platform "bigquery"}}
+                {{- if not (hasKey $env_secret "GCP_PRIVATE_KEY") }}
+              - name: "GCP_PRIVATE_KEY"
+                valueFrom:
+                  secretKeyRef:
+                    name: secret-ingredients
+                    key: gcpPrivateKey
+                {{- end }}
+                {{- if not (hasKey $env_secret "GCP_PRIVATE_KEY_ID") }}
+              - name: "GCP_PRIVATE_KEY_ID"
+                valueFrom:
+                  secretKeyRef:
+                    name: secret-ingredients
+                    key: gcpPrivateKeyId
+                {{- end }}
+              {{- end }}
+            {{- if .extraSidecars }}
+              {{- toYaml .extraSidecars | nindent 10 }}
+            {{- end }}
+          restartPolicy: {{ default "OnFailure" .restartPolicy }}
+          {{- with default $.Values.global.nodeSelector .nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .affinity }}
+          affinity:
+            {{- toYaml .affinity | nindent 12 }}
+          {{- end }}
+          {{- with default $.Values.global.tolerations .tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumes:
+            - name: recipe
+              configMap:
+                name: {{ default (printf "%s" $config_name) $configs.recipe_name }}
+          {{- if .extraVolumes }}
+            {{- toYaml .extraVolumes | nindent 12 }}
+          {{- end }}
+---
+    {{- end }}
+  {{- end }}
+{{- end }}
