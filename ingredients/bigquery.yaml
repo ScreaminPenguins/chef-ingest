@@ -30,7 +30,6 @@ source:
         deny: []
         ignoreCase: true
     column_limit: 300                                                 # Maximum number of columns to process in a table. This is a low level config property which should be touched with care. This restriction is needed because excessively wide tables can result in failure to ingest the schema.
-    convert_urns_to_lowercase: false                                  # Whether to convert dataset urns to lowercase.
     credential:
       auth_provider_x509_cert_url: https://www.googleapis.com/oauth2/v1/certs
       auth_uri: https://accounts.google.com/o/oauth2/auth
@@ -47,15 +46,10 @@ source:
       deny: []
       ignoreCase: true
     debug_include_full_payloads: false                                # Include full payload into events. It is only for debugging and internal use.
-    domain:                                                           # A class to store allow deny regexes
-      allow: ['.*']
-      deny: []
-      ignoreCase: true
     enable_legacy_sharded_table_support: true                         # Use the legacy sharded table urn suffix added.
     enable_stateful_lineage_ingestion: true                           # Enable stateful lineage ingestion. This will store lineage window timestamps after successful lineage ingestion. and will not run lineage ingestion for same timestamps in subsequent run.
     enable_stateful_profiling: true                                   # Enable stateful profiling. This will store profiling timestamps per dataset after successful profiling. and will not run profiling again in subsequent run if table has not been updated.
     enable_stateful_usage_ingestion: true                             # enable_stateful_usage_ingestion
-    env: PROD                                                         # The environment that all assets produced by this connector belong to
     exclude_empty_projects: true                                      # Option to exclude empty projects from being ingested.
     extra_client_options: {}                                          # Additional options to pass to google.cloud.logging_v2.client.Client.
     extract_column_lineage: true                                      # If enabled, generate column level lineage. Requires lineage_use_sql_parser to be enabled.
@@ -140,9 +134,6 @@ source:
     requests_per_min: 60                                              # Used to control number of API calls made per min. Only used when `rate_limit` is set to `True`.
     schema_resolution_batch_size: 100                                 # The number of tables to process in a batch when resolving schema from DataHub.
     scheme: bigquery                                                  # N/A
-    stateful_ingestion:
-      enabled: true                                                   # Whether or not to enable stateful ingest. Default: True if a pipeline_name is set and either a datahub-rest sink or datahub_api is specified, otherwise False
-      remove_stale_metadata: true                                     # Soft-deletes the entities present in the last successful run but missing in the current run with stateful_ingestion enabled.
     table_pattern:                                                    # Regex patterns for tables to filter in ingestion. Specify regex to match the entire table name in database.schema.table format. e.g. to match all tables starting with customer in Customer database and public schema, use the regex 'Customer.public.customer.*'
       allow: ['.*']
       deny: []

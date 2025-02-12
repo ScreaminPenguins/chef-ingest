@@ -1,0 +1,12 @@
+pipeline_name: ~
+source:
+  config:
+    convert_urns_to_lowercase: false                                  # Whether to convert dataset urns to lowercase.
+    domain:                                                           # A class to store allow deny regexes
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    env: PROD
+    stateful_ingestion:
+      enabled: true                                                   # Whether or not to enable stateful ingest. Default: True if a pipeline_name is set and either a datahub-rest sink or datahub_api is specified, otherwise False
+      remove_stale_metadata: true                                     # Soft-deletes the entities present in the last successful run but missing in the current run with stateful_ingestion enabled.

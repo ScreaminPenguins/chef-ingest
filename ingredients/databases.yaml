@@ -1,0 +1,95 @@
+source:
+  config:
+    database: ~
+    host_port: ${HOST_PORT}
+    include_table_location_lineage: true                              # If the source supports it, include table lineage to the underlying storage location.
+    include_tables: true                                              # Whether tables should be ingested.
+    include_view_column_lineage: true                                 # Populates column-level lineage for view->view and table->view lineage using DataHub's sql parser. Requires include_view_lineage to be enabled.
+    include_view_lineage: true                                        # Populates view->view and table->view lineage using DataHub's sql parser.
+    include_views: true                                               # Whether views should be ingested.
+    incremental_lineage: true                                        # When enabled, emits lineage as incremental to existing lineage already in DataHub. When disabled, re-states lineage on each run.
+    # options: {}                                                     # Any options specified here will be passed to [SQLAlchemy.create_engine](https://docs.sqlalchemy.org/en/14/core/engines.html#sqlalchemy.create_engine) as kwargs.
+    password: ${DATAHUB_PSWD}
+    platform_instance: ~
+    sqlalchemy_uri: ~
+    use_file_backed_cache: true
+    username: datahub
+    database_pattern:                                                  # Regex patterns for dataset to filter in ingestion. Specify regex to only match the schema name. e.g. to match all tables in schema analytics, use the regex 'analytics'
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    profile_pattern:                                                  # Regex patterns to filter tables (or specific columns) for profiling during ingestion. Note that only tables allowed by the table_pattern will be considered.
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    table_pattern:                                                  # Regex patterns to filter tables (or specific columns) for profiling during ingestion. Note that only tables allowed by the table_pattern will be considered.
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    view_pattern:                                                  # Regex patterns to filter tables (or specific columns) for profiling during ingestion. Note that only tables allowed by the table_pattern will be considered.
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    classification:                                                   # For details, refer to Classification.
+      classifiers:
+        type: datahub
+        config: {}
+      column_pattern:
+        allow: ['.*']
+        deny: []
+        ignoreCase: true
+      enabled: false
+      info_type_to_term: {}
+      max_workers: 4
+      sample_size: 100
+      table_pattern:
+        allow: ['.*']
+        deny: []
+        ignoreCase: true
+    profiling:
+      # limit: ~                                                      # Max number of documents to profile. By default, profiles all documents.
+      # max_number_of_fields_to_profile: ~                            # A positive integer that specifies the maximum number of columns to profile for any table. None implies all columns. The cost of profiling goes up significantly as the number of columns to profile goes up.
+      # offset: ~                                                     # Offset in documents to profile. By default, uses no offset.
+      # partition_datetime: ~                                         # If specified, profile only the partition which matches this datetime. If not specified, profile the latest partition. Only Bigquery supports this.
+      # profile_if_updated_since_days: ~                              # Profile table only if it has been updated since these many number of days. If set to null, no constraint of last modified time for tables to profile. Supported only in snowflake and BigQuery.
+      catch_exceptions: true
+      enabled: false
+      field_sample_values_limit: 20                                   # Upper limit for number of sample values to collect for all columns.
+      include_field_distinct_count: false                             # Whether to profile for the number of distinct values for each column.
+      include_field_distinct_value_frequencies: false                 # Whether to profile for distinct value frequencies.
+      include_field_histogram: false                                  # Whether to profile for the histogram for numeric fields.
+      include_field_max_value: false                                  # Whether to profile for the max value of numeric columns.
+      include_field_mean_value: false                                 # Whether to profile for the mean value of numeric columns.
+      include_field_median_value: false                               # Whether to profile for the median value of numeric columns.
+      include_field_min_value: false                                  # Whether to profile for the min value of numeric columns.
+      include_field_null_count: false                                 # Whether to profile for the number of nulls for each column.
+      include_field_quantiles: false                                  # Whether to profile for the quantiles of numeric columns.
+      include_field_sample_values: false                              # Whether to profile for the sample values for all columns.
+      inlude_field_stddev_value: false                                # Whether to profile for the standard deviation of numeric columns.
+      max_workers: 20                                                 # Number of worker threads to use for profiling. Set to 1 to disable.
+      operation_config:                                               # Experimental feature. To specify operation configs.
+        # profile_date_of_month: ~                                    # Number between 1 to 31 for date of month (both inclusive). If not specified, defaults to Nothing and this field does not take affect.
+        # profile_day_of_week: ~                                      # Number between 0 to 6 for day of week (both inclusive). 0 is Monday and 6 is Sunday. If not specified, defaults to Nothing and this field does not take affect.
+        lower_freq_profile_enabled: false                             # Whether to do profiling at lower freq or not. This does not do any scheduling just adds additional checks to when not to run profiling.
+      partition_profiling_enabled: true                               # Whether to profile partitioned tables. Only BigQuery and Aws Athena supports this. If enabled, latest partition data is used for profiling.
+      profile_external_tables: false                                  # Whether to profile external tables. Only Snowflake and Redshift supports this.
+      profile_nested_fields: true                                     # Whether to profile complex types like structs, arrays and maps.
+      profile_table_level_only: false                                 # Whether to perform profiling at table-level only, or include column-level profiling as well.
+      profile_table_row_count_estimate_only: false                    # Use an approximate query for row count. This will be much faster but slightly less accurate. Only supported for Postgres and MySQL.
+      profile_table_row_limit: 5000000                                # Profile tables only if their row count is less than specified count. If set to null, no limit on the row count of tables to profile. Supported only in Snowflake, BigQuery. Supported for Oracle based on gathered stats.
+      profile_table_size_limit: 5                                     # Profile tables only if their size is less than specified GBs. If set to null, no limit on the size of tables to profile. Supported only in Snowflake, BigQuery and Databricks. Supported for Oracle based on calculated size from gathered stats.
+      query_combiner_enabled: true                                    # This feature is still experimental and can be disabled if it causes issues. Reduces the total number of queries issued and speeds up profiling by dynamically combining SQL queries where possible.
+      report_dropped_profiles: false                                  # Whether to report datasets or dataset columns which were not profiled. Set to True for debugging purposes
+      sample_size: 10000                                              # Number of rows to be sampled from table for column level profiling.Applicable only if use_sampling is set to True.
+      tags_to_ignore_sampling: []                                     # Fixed list of tags to ignore sampling. If not specified, tables will be sampled based on use_sampling.
+      turn_off_expensive_profiling_metrics: true                      # Whether to turn off expensive profiling or not. This turns off profiling for quantiles, distinct_value_frequencies, histogram & sample_values. This also limits maximum number of fields being profiled to 10.
+      use_sampling: false                                             # Whether to profile column level stats on sample of table. Only BigQuery and Snowflake support this. If enabled, profiling is done on rows sampled from table. Sampling is not done for smaller tables.
+
+
+
+transformers:
+  - type: set_dataset_browse_path
+    config:
+      replace_existing: true
+      path_templates:
+        - /PLATFORM/DATASET_PARTS

@@ -1,0 +1,13 @@
+source:
+  type: mysql
+  config:
+    database_pattern:
+      allow:
+        - .*
+      deny:
+        - information_schema
+        - mysql
+        - performance_schema
+        - sys
+        - percona
+    scheme: mysql+pymysql

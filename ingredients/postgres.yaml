@@ -1,0 +1,20 @@
+source:
+  type: postgres
+  config:
+    database_pattern:
+      allow:
+        - .*
+      deny:
+        - cloudsqladmin
+        - postgres
+      ignoreCase: true
+    schema_pattern:
+      allow:
+        - .*
+      deny:
+        - information_schema
+        - pg_catalog
+        - pganalyze
+        - pglogical
+    intitial_database: postgres
+    scheme: postgresql+psycopg2
