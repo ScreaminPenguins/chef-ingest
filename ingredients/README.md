@@ -10,7 +10,7 @@ These are the common high level configurations that are shared across all source
 
 ### Database
 
-These configurations are used for database systems like MySQL, Postgres, & Bigquery
+These configurations are shared across database platforms like MySQL, Postgres, & Bigquery
 
 
 ### Platform Specific

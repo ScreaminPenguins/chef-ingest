@@ -1,0 +1,179 @@
+# See for all/default configurations: https://datahubproject.io/docs/generated/ingestion/sources/bigquery
+source:
+  type: bigquery
+  config:
+    # end_time: ~                                                     # Latest date of lineage/usage to consider. Default: Current time in UTC
+    # match_fully_qualified_names: true                               # [deprecated] Whether `dataset_pattern` is matched against fully qualified dataset name `<project_id>.<dataset_name>`.
+    # options: {}                                                     # Any options specified here will be passed to [SQLAlchemy.create_engine](https://docs.sqlalchemy.org/en/14/core/engines.html#sqlalchemy.create_engine) as kwargs.
+    # platform_instance: ~                                            # The instance of the platform that all assets produced by this recipe belong to. This should be unique within the platform. See https://datahubproject.io/docs/platform-instances/ for more details.
+    # project_on_behalf: ~                                            # [Advanced] The BigQuery project in which queries are executed. Will be passed when creating a job. If not passed, falls back to the project associated with the service account.
+    # start_time: ~                                                   # Earliest date of lineage/usage to consider. Default: Last full day in UTC (or hour, depending on `bucket_duration`). You can also specify relative time with respect to end_time such as '-7 days' Or '-7d'.
+    bigquery_audit_metadata_datasets: []                              # A list of datasets that contain a table named cloudaudit_googleapis_com_data_access which contain BigQuery audit logs, specifically, those containing BigQueryAuditMetadata. It is recommended that the project of the dataset is also specified, for example, projectA.datasetB.
+    bucket_duration: DAY                                              # Size of the time window to aggregate usage stats. Default: DAY
+    capture_dataset_label_as_tag: false                               # Capture BigQuery dataset labels as DataHub tag
+    capture_table_label_as_tag: false                                 # Capture BigQuery table labels as DataHub tag
+    capture_view_label_as_tag: false                                  # Capture BigQuery view labels as DataHub tag
+    classification:                                                   # For details, refer to Classification.
+      classifiers:
+        type: datahub
+        config: {}
+      column_pattern:
+        allow: ['.*']
+        deny: []
+        ignoreCase: true
+      enabled: false
+      info_type_to_term: {}
+      max_workers: 4
+      sample_size: 100
+      table_pattern:
+        allow: ['.*']
+        deny: []
+        ignoreCase: true
+    column_limit: 300                                                 # Maximum number of columns to process in a table. This is a low level config property which should be touched with care. This restriction is needed because excessively wide tables can result in failure to ingest the schema.
+    convert_urns_to_lowercase: false                                  # Whether to convert dataset urns to lowercase.
+    credential:
+      auth_provider_x509_cert_url: https://www.googleapis.com/oauth2/v1/certs
+      auth_uri: https://accounts.google.com/o/oauth2/auth
+      client_email: ${GCP_CLIENT_EMAIL}
+      client_id: ${GCP_CLIENT_ID}
+      client_x509_cert_url: https://www.googleapis.com/robot/v1/metadata/x509/client_email
+      private_key: ${GCP_PRIVATE_KEY}                                 # Private key in a form of '-----BEGIN PRIVATE KEY-----\nprivate-key\n-----END PRIVATE KEY-----\n'
+      private_key_id: ${GCP_PRIVATE_KEY_ID}                           # Private Key ID
+      project_id: ${GCP_PROJECT_ID}                                   # Project ID to set the credentials
+      token_uri: https://oauth2.googleapis.com/token                  # token uri
+      type: service_account                                           # authentication type
+    dataset_pattern:                                                  # Regex patterns for dataset to filter in ingestion. Specify regex to only match the schema name. e.g. to match all tables in schema analytics, use the regex 'analytics'
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    debug_include_full_payloads: false                                # Include full payload into events. It is only for debugging and internal use.
+    domain:                                                           # A class to store allow deny regexes
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    enable_legacy_sharded_table_support: true                         # Use the legacy sharded table urn suffix added.
+    enable_stateful_lineage_ingestion: true                           # Enable stateful lineage ingestion. This will store lineage window timestamps after successful lineage ingestion. and will not run lineage ingestion for same timestamps in subsequent run.
+    enable_stateful_profiling: true                                   # Enable stateful profiling. This will store profiling timestamps per dataset after successful profiling. and will not run profiling again in subsequent run if table has not been updated.
+    enable_stateful_usage_ingestion: true                             # enable_stateful_usage_ingestion
+    env: PROD                                                         # The environment that all assets produced by this connector belong to
+    exclude_empty_projects: true                                      # Option to exclude empty projects from being ingested.
+    extra_client_options: {}                                          # Additional options to pass to google.cloud.logging_v2.client.Client.
+    extract_column_lineage: true                                      # If enabled, generate column level lineage. Requires lineage_use_sql_parser to be enabled.
+    extract_lineage_from_catalog: false                               # This flag enables the data lineage extraction from Data Lineage API exposed by Google Data Catalog. NOTE: This extractor can't build views lineage. It's recommended to enable the view's DDL parsing. Read the docs to have more information about: https://cloud.google.com/data-catalog/docs/concepts/about-data-lineage
+    extract_policy_tags_from_catalog: false                           # This flag enables the extraction of policy tags from the Google Data Catalog API. When enabled, the extractor will fetch policy tags associated with BigQuery table columns. For more information about policy tags and column-level security, refer to the documentation: https://cloud.google.com/bigquery/docs/column-level-security-intro
+    gcs_lineage_config:                                               # Common config for gcs lineage generation
+      ignore_non_path_spec_path: false                                # Ignore paths that are not match in path_specs. It only applies if path_specs are specified.
+      strip_urls: true                                                # Strip filename from gcs url. It only applies if path_specs are not specified.
+      path_specs: []                                                  # List of PathSpec.
+    include_column_lineage_with_gcs: true                             # When enabled, column-level lineage will be extracted from the gcs.
+    include_data_platform_instance: false                             # Whether to create a DataPlatformInstance aspect, equal to the BigQuery project id. If enabled, will cause redundancy in the browse path for BigQuery entities in the UI, because the project id is represented as the top-level container.
+    include_external_url: true                                        # Whether to populate BigQuery Console url to Datasets/Tables
+    include_queries: true                                             # Only applicable if use_queries_v2 is enabled.
+    include_query_usage_statistics: true                              # Only applicable if use_queries_v2 is enabled.
+    include_schema_metadata: true                                     # Whether to ingest the BigQuery schema, i.e. projects, schemas, tables, and views.
+    include_table_constraints: true                                   # Whether to ingest table constraints. If you know you don't use table constraints, you can disable it to save one extra query per dataset. In general it should be enabled
+    include_table_lineage: true                                       # Option to enable/disable lineage generation. Is enabled by default.
+    include_table_location_lineage: true                              # If the source supports it, include table lineage to the underlying storage location.
+    include_table_snapshots: true                                     # Whether table snapshots should be ingested.
+    include_tables: true                                              # Whether tables should be ingested.
+    include_usage_statistics: true                                    # Generate usage statistic
+    include_view_column_lineage: true                                 # Populates column-level lineage for view->view and table->view lineage using DataHub's sql parser. Requires include_view_lineage to be enabled.
+    include_view_lineage: true                                        # Populates view->view and table->view lineage using DataHub's sql parser.
+    include_views: true                                               # Whether views should be ingested.
+    incremental_lineage: false                                        # When enabled, emits lineage as incremental to existing lineage already in DataHub. When disabled, re-states lineage on each run.
+    lineage_sql_parser_use_raw_names: false                           # This parameter ignores the lowercase pattern stipulated in the SQLParser. NOTE: Ignored if lineage_use_sql_parser is False.
+    lineage_use_sql_parser: true                                      # Use sql parser to resolve view/table lineage.
+    log_page_size: 1000                                               # The number of log item will be queried per page for lineage collection
+    max_query_duration: 900.0                                         # Correction to pad start_time and end_time with. For handling the case where the read happens within our time range but the query completion event is delayed and happens after the configured end time.
+    max_threads_dataset_parallelism: 20                               # Number of worker threads to use to parallelize BigQuery Dataset Metadata Extraction. Set to 1 to disable.
+    number_of_datasets_process_in_batch_if_profiling_enabled: 1000    # Number of partitioned table queried in batch when getting metadata. This is a low level config property which should be touched with care. This restriction is needed because we query partitions system view which throws error if we try to touch too many tables.
+    profile_pattern:                                                  # Regex patterns to filter tables (or specific columns) for profiling during ingestion. Note that only tables allowed by the table_pattern will be considered.
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    profiling:
+      # limit: ~                                                      # Max number of documents to profile. By default, profiles all documents.
+      # max_number_of_fields_to_profile: ~                            # A positive integer that specifies the maximum number of columns to profile for any table. None implies all columns. The cost of profiling goes up significantly as the number of columns to profile goes up.
+      # offset: ~                                                     # Offset in documents to profile. By default, uses no offset.
+      # partition_datetime: ~                                         # If specified, profile only the partition which matches this datetime. If not specified, profile the latest partition. Only Bigquery supports this.
+      # profile_if_updated_since_days: ~                              # Profile table only if it has been updated since these many number of days. If set to null, no constraint of last modified time for tables to profile. Supported only in snowflake and BigQuery.
+      catch_exceptions: true
+      enabled: false
+      field_sample_values_limit: 20                                   # Upper limit for number of sample values to collect for all columns.
+      include_field_distinct_count: false                             # Whether to profile for the number of distinct values for each column.
+      include_field_distinct_value_frequencies: false                 # Whether to profile for distinct value frequencies.
+      include_field_histogram: false                                  # Whether to profile for the histogram for numeric fields.
+      include_field_max_value: false                                  # Whether to profile for the max value of numeric columns.
+      include_field_mean_value: false                                 # Whether to profile for the mean value of numeric columns.
+      include_field_median_value: false                               # Whether to profile for the median value of numeric columns.
+      include_field_min_value: false                                  # Whether to profile for the min value of numeric columns.
+      include_field_null_count: false                                 # Whether to profile for the number of nulls for each column.
+      include_field_quantiles: false                                  # Whether to profile for the quantiles of numeric columns.
+      include_field_sample_values: false                              # Whether to profile for the sample values for all columns.
+      inlude_field_stddev_value: false                                # Whether to profile for the standard deviation of numeric columns.
+      max_workers: 20                                                 # Number of worker threads to use for profiling. Set to 1 to disable.
+      operation_config:                                               # Experimental feature. To specify operation configs.
+        # profile_date_of_month: ~                                    # Number between 1 to 31 for date of month (both inclusive). If not specified, defaults to Nothing and this field does not take affect.
+        # profile_day_of_week: ~                                      # Number between 0 to 6 for day of week (both inclusive). 0 is Monday and 6 is Sunday. If not specified, defaults to Nothing and this field does not take affect.
+        lower_freq_profile_enabled: false                             # Whether to do profiling at lower freq or not. This does not do any scheduling just adds additional checks to when not to run profiling.
+      partition_profiling_enabled: true                               # Whether to profile partitioned tables. Only BigQuery and Aws Athena supports this. If enabled, latest partition data is used for profiling.
+      profile_external_tables: false                                  # Whether to profile external tables. Only Snowflake and Redshift supports this.
+      profile_nested_fields: true                                     # Whether to profile complex types like structs, arrays and maps.
+      profile_table_level_only: false                                 # Whether to perform profiling at table-level only, or include column-level profiling as well.
+      profile_table_row_count_estimate_only: false                    # Use an approximate query for row count. This will be much faster but slightly less accurate. Only supported for Postgres and MySQL.
+      profile_table_row_limit: 5000000                                # Profile tables only if their row count is less than specified count. If set to null, no limit on the row count of tables to profile. Supported only in Snowflake, BigQuery. Supported for Oracle based on gathered stats.
+      profile_table_size_limit: 5                                     # Profile tables only if their size is less than specified GBs. If set to null, no limit on the size of tables to profile. Supported only in Snowflake, BigQuery and Databricks. Supported for Oracle based on calculated size from gathered stats.
+      query_combiner_enabled: true                                    # This feature is still experimental and can be disabled if it causes issues. Reduces the total number of queries issued and speeds up profiling by dynamically combining SQL queries where possible.
+      report_dropped_profiles: false                                  # Whether to report datasets or dataset columns which were not profiled. Set to True for debugging purposes
+      sample_size: 10000                                              # Number of rows to be sampled from table for column level profiling.Applicable only if use_sampling is set to True.
+      tags_to_ignore_sampling: []                                     # Fixed list of tags to ignore sampling. If not specified, tables will be sampled based on use_sampling.
+      turn_off_expensive_profiling_metrics: true                      # Whether to turn off expensive profiling or not. This turns off profiling for quantiles, distinct_value_frequencies, histogram & sample_values. This also limits maximum number of fields being profiled to 10.
+      use_sampling: false                                             # Whether to profile column level stats on sample of table. Only BigQuery and Snowflake support this. If enabled, profiling is done on rows sampled from table. Sampling is not done for smaller tables.
+    project_id_pattern:                                               # Regex patterns for project_id to filter in ingestion.
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    project_ids: []                                                   # Ingests specified project_ids. Use this property if you want to specify what projects to ingest or don't want to give project resourcemanager.projects.list to your service account. Overrides project_id_pattern.
+    project_labels: []                                                # Ingests projects with the specified labels. Set value in the format of key:value. Use this property to define which projects to ingest basedon project-level labels. If project_ids or project_id is set, this configuration has no effect. The ingestion process filters projects by label first, and then applies the project_id_pattern.
+    rate_limit: false                                                 # Should we rate limit requests made to API.
+    region_qualifiers: ['region-us', 'region-eu']                     # BigQuery regions to be scanned for bigquery jobs when using use_queries_v2.
+    requests_per_min: 60                                              # Used to control number of API calls made per min. Only used when `rate_limit` is set to `True`.
+    schema_resolution_batch_size: 100                                 # The number of tables to process in a batch when resolving schema from DataHub.
+    scheme: bigquery                                                  # N/A
+    stateful_ingestion:
+      enabled: true                                                   # Whether or not to enable stateful ingest. Default: True if a pipeline_name is set and either a datahub-rest sink or datahub_api is specified, otherwise False
+      remove_stale_metadata: true                                     # Soft-deletes the entities present in the last successful run but missing in the current run with stateful_ingestion enabled.
+    table_pattern:                                                    # Regex patterns for tables to filter in ingestion. Specify regex to match the entire table name in database.schema.table format. e.g. to match all tables starting with customer in Customer database and public schema, use the regex 'Customer.public.customer.*'
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    table_snapshot_pattern:                                           # Regex patterns for table snapshots to filter in ingestion. Specify regex to match the entire snapshot name in database.schema.snapshot format. e.g. to match all snapshots starting with customer in Customer database and public schema, use the regex 'Customer.public.customer.*'
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    temp_table_dataset_prefix: _                                      # If you are creating temp tables in a dataset with a particular prefix you can use this config to set the prefix for the dataset. This is to support workflows from before bigquery's introduction of temp tables. By default we use `_` because of datasets that begin with an underscore are hidden by default https://cloud.google.com/bigquery/docs/datasets#dataset-naming.
+    upstream_lineage_in_report: false                                 # Useful for debugging lineage information. Set to True to see the raw lineage created internally.
+    usage:                                                            # Usage related configs
+      # end_time: ~
+      # start_time: ~
+      apply_view_usage_to_tables: false
+      bucket_duration: DAY
+      format_sql_queries: false
+      include_operational_stats: true
+      include_read_operational_stats: false
+      include_top_n_queries: true
+      max_query_duration: 900.0
+      top_n_queries: 10
+      user_email_pattern:
+        allow: ['.*']
+        deny: []
+        ignoreCase: true
+    use_date_sharded_audit_log_tables: false                          # Whether to read date sharded tables or time partitioned tables when extracting usage from exported audit logs.
+    use_exported_bigquery_audit_metadata: true                        # When configured, use BigQueryAuditMetadata in bigquery_audit_metadata_datasets to compute lineage information.
+    use_file_backed_cache: true                                       # Whether to use a file backed cache for the view definitions.
+    use_queries_v2: false                                             # If enabled, uses the new queries extractor to extract queries from bigquery.
+    use_tables_list_query_v2: false                                   # List tables using an improved query that extracts partitions and last modified timestamps more accurately. Requires the ability to read table data. Automatically enabled when profiling is enabled.
+    view_pattern:                                                     # Regex patterns for views to filter in ingestion. Note: Defaults to table_pattern if not specified. Specify regex to match the entire view name in database.schema.view format. e.g. to match all views starting with customer in Customer database and public schema, use the regex 'Customer.public.customer.*'
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
