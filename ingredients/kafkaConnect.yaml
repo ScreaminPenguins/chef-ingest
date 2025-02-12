@@ -1,0 +1,10 @@
+source:
+  type: "kafka-connect"
+  config:
+    connect_uri: "${CONNECT_URI}"
+    connector_patterns:
+      allow: ['.*']
+      deny: []
+      ignoreCase: true
+    generic_connectors: []
+    provided_configs: []

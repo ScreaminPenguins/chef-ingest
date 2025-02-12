@@ -1,0 +1,199 @@
+{{- $labels := include "chef-ingest.labels" .}}
+
+
+{{/* Get Ingredients used to make up the recipe */}}
+{{- $bigquery_ing := .Files.Get "ingredients/bigquery.yaml" | fromYaml -}}
+{{- $confluent_sink := .Files.Get "ingredients/confluentSink.yaml" | fromYaml -}}
+{{- $database_ing := .Files.Get "ingredients/database.yaml" | fromYaml -}}
+{{- $datahub_rest_sink := .Files.Get "ingredients/datahubRestSink.yaml" | fromYaml -}}
+{{- $kafka_connect_ing := .Files.Get "ingredients/kafkaConnect.yaml" | fromYaml -}}
+{{- $kafka_ing := .Files.Get "ingredients/kafka.yaml" | fromYaml -}}
+{{- $mysql_ing := .Files.Get "ingredients/mysql.yaml" | fromYaml -}}
+{{- $postgres_ing := .Files.Get "ingredients/postgres.yaml" | fromYaml -}}
+{{- $starter_ing := .Files.Get "ingredients/starter.yaml" | fromYaml -}}
+
+{{/* BigQuery Configs */}}
+{{ $project := .Values.crons.bigquery}}
+{{- if $project }}
+{{- range $instance, $environments := $project }}
+  {{- range $env, $configs := $environments }}
+    {{- $instance_name := $instance | replace "_" "-" -}}
+    {{- $config_name := printf "%s-%s-recipe" $instance_name $configs.platform_env}}
+
+    {{- $recipe := deepCopy $starter_ing | mergeOverwrite (deepCopy $bigquery_ing) }}
+    {{- $recipe = mergeOverwrite $recipe (dict "pipeline_name" (printf "urn:li:dataHubIngestionSource:%s-%s" $instance_name $configs.platform_env)) -}}
+    {{- $recipe = mergeOverwrite $recipe (dict "source" (dict "config" (dict "env" ($configs.platform_env | upper)))) -}}
+
+    {{- if eq (default "datahub-kafka" $configs.sinkType) "datahub-kafka" }}
+      {{- $recipe = mergeOverwrite $recipe $confluent_sink }}
+    {{- else }}
+      {{- $recipe = mergeOverwrite $recipe $datahub_rest_sink }}
+    {{- end }}
+
+    {{- if $configs.source }}
+      {{- $recipe = mergeOverwrite $recipe (dict "source" $configs.source) }}
+    {{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_name }}
+  labels: {{ $labels | nindent 4 }}
+data:
+  recipe.yaml: |
+    {{- $recipe | toYaml | nindent 4 }}
+
+---
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{/* MySQL Configs */}}
+{{ $project := .Values.crons.mysql}}
+{{- if $project }}
+{{- range $instance, $environments := $project }}
+  {{- range $env, $configs := $environments }}
+    {{- $instance_name := $instance | replace "_" "-" -}}
+    {{- $config_name := printf "%s-%s-recipe" $instance_name $configs.platform_env}}
+
+    {{- $recipe := deepCopy $starter_ing | mergeOverwrite  (deepCopy $database_ing) | mergeOverwrite (deepCopy $mysql_ing) }}
+    {{- $recipe = mergeOverwrite $recipe (dict "pipeline_name" (printf "urn:li:dataHubIngestionSource:%s-%s" $instance_name $configs.platform_env)) -}}
+    {{- $recipe = mergeOverwrite $recipe (dict "source" (dict "config" (dict "env" ($configs.platform_env | upper)))) -}}
+    {{- $recipe = mergeOverwrite $recipe (dict "source" (dict "config" (dict "platform_instance" (printf "%s-%s" $instance_name $configs.platform_env | lower)))) -}}
+
+    {{- if eq (default "datahub-kafka" $configs.sinkType) "datahub-kafka" }}
+      {{- $recipe = mergeOverwrite $recipe (deepCopy $confluent_sink) }}
+    {{- else }}
+      {{- $recipe = mergeOverwrite $recipe (deepCopy $datahub_rest_sink) }}
+    {{- end }}
+
+    {{- if $configs.source }}
+      {{- $recipe = mergeOverwrite $recipe (dict "source" $configs.source) }}
+    {{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_name }}
+  labels: {{ $labels | nindent 4 }}
+data:
+  recipe.yaml: |
+    {{- $recipe | toYaml | nindent 4 }}
+
+---
+  {{- end }}
+{{- end }}
+{{- end }}
+
+
+{{/* PostGres Configs */}}
+{{ $project := .Values.crons.postgres}}
+{{- if $project }}
+{{- range $instance, $environments := $project }}
+  {{- range $env, $configs := $environments }}
+    {{- $instance_name := $instance | replace "_" "-" -}}
+    {{- $config_name := printf "%s-%s-recipe" $instance_name $configs.platform_env}}
+
+    {{- $recipe := deepCopy $starter_ing | mergeOverwrite  (deepCopy $database_ing) | mergeOverwrite (deepCopy $postgres_ing) }}
+    {{- $recipe = mergeOverwrite $recipe (dict "pipeline_name" (printf "urn:li:dataHubIngestionSource:%s-%s" $instance_name $configs.platform_env)) -}}
+    {{- $recipe = mergeOverwrite $recipe (dict "source" (dict "config" (dict "env" ($configs.platform_env | upper)))) -}}
+    {{- $recipe = mergeOverwrite $recipe (dict "source" (dict "config" (dict "platform_instance" (printf "%s-%s" $instance_name $configs.platform_env | lower)))) -}}
+
+    {{- if eq (default "datahub-kafka" $configs.sinkType) "datahub-kafka" }}
+      {{- $recipe = mergeOverwrite $recipe (deepCopy $confluent_sink) }}
+    {{- else }}
+      {{- $recipe = mergeOverwrite $recipe (deepCopy $datahub_rest_sink) }}
+    {{- end }}
+
+    {{- if $configs.source }}
+      {{- $recipe = mergeOverwrite $recipe (dict "source" $configs.source) }}
+    {{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_name }}
+  labels: {{ $labels | nindent 4 }}
+data:
+  recipe.yaml: |
+    {{- $recipe | toYaml | nindent 4 }}
+
+---
+  {{- end }}
+{{- end }}
+{{- end }}
+
+
+{{/* Kafka Configs */}}
+{{ $project := .Values.crons.kafka}}
+{{- if $project }}
+{{- range $instance, $environments := $project }}
+  {{- range $env, $configs := $environments }}
+    {{- $instance_name := $instance | replace "_" "-" -}}
+    {{- $config_name := printf "%s-%s-recipe" $instance_name $configs.platform_env}}
+
+    {{- $recipe := deepCopy $starter_ing | mergeOverwrite  (deepCopy $kafka_ing) }}
+    {{- $recipe = mergeOverwrite $recipe (dict "pipeline_name" (printf "urn:li:dataHubIngestionSource:%s-%s" $instance_name $configs.platform_env)) -}}
+    {{- $recipe = mergeOverwrite $recipe (dict "source" (dict "config" (dict "env" ($configs.platform_env | upper)))) -}}
+    {{- $recipe = mergeOverwrite $recipe (dict "source" (dict "config" (dict "platform_instance" (printf "%s-%s" $instance_name $configs.platform_env | lower)))) -}}
+
+    {{- if eq (default "datahub-kafka" $configs.sinkType) "datahub-kafka" }}
+      {{- $recipe = mergeOverwrite $recipe (deepCopy $confluent_sink) }}
+    {{- else }}
+      {{- $recipe = mergeOverwrite $recipe (deepCopy $datahub_rest_sink) }}
+    {{- end }}
+
+    {{- if $configs.source }}
+      {{- $recipe = mergeOverwrite $recipe (dict "source" $configs.source) }}
+    {{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_name }}
+  labels: {{ $labels | nindent 4 }}
+data:
+  recipe.yaml: |
+    {{- $recipe | toYaml | nindent 4 }}
+
+---
+  {{- end }}
+{{- end }}
+{{- end }}
+
+{{/* Kafka-Connect Configs */}}
+{{ $project := .Values.crons.kafka_connect}}
+{{- if $project }}
+{{- range $instance, $environments := $project }}
+  {{- range $env, $configs := $environments }}
+    {{- $instance_name := $instance | replace "_" "-" -}}
+    {{- $config_name := printf "%s-%s-recipe" $instance_name $configs.platform_env}}
+
+    {{- $recipe := deepCopy $starter_ing | mergeOverwrite  (deepCopy $kafka_connect_ing) }}
+    {{- $recipe = mergeOverwrite $recipe (dict "pipeline_name" (printf "urn:li:dataHubIngestionSource:%s-%s" $instance_name $configs.platform_env)) -}}
+    {{- $recipe = mergeOverwrite $recipe (dict "source" (dict "config" (dict "env" ($configs.platform_env | upper)))) -}}
+    {{- $recipe = mergeOverwrite $recipe (dict "source" (dict "config" (dict "platform_instance" (printf "%s-%s" $instance_name $configs.platform_env | lower)))) -}}
+
+    {{- if eq (default "datahub-kafka" $configs.sinkType) "datahub-kafka" }}
+      {{- $recipe = mergeOverwrite $recipe (deepCopy $confluent_sink) }}
+    {{- else }}
+      {{- $recipe = mergeOverwrite $recipe (deepCopy $datahub_rest_sink) }}
+    {{- end }}
+
+    {{- if $configs.source }}
+      {{- $recipe = mergeOverwrite $recipe (dict "source" $configs.source) }}
+    {{- end }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $config_name }}
+  labels: {{ $labels | nindent 4 }}
+data:
+  recipe.yaml: |
+    {{- $recipe | toYaml | nindent 4 }}
+
+---
+  {{- end }}
+{{- end }}
+{{- end }}

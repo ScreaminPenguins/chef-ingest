@@ -1,0 +1,26 @@
+source:
+  type: "kafka"
+  config:
+    platform_instance: null
+    connection:
+      bootstrap: "${SOURCE_BOOTSTRAP_SERVER}"
+      consumer_config:
+        security.protocol: "SASL_SSL"
+        sasl.mechanism: "PLAIN"
+        sasl.username: "${SOURCE_KAFKA_SASL_USERNAME}"
+        sasl.password: "${SOURCE_KAFKA_SASL_PASSWORD}"
+      schema_registry_url: "${SOURCE_SCHEMA_REGISTRY_URL}"
+      schema_registry_config:
+        basic.auth.user.info: "${SOURCE_SR_BASIC_USER_AUTH}"
+    disable_topic_record_naming_strategy: false
+    enable_meta_mapping: false
+    field_meta_mapping: {}
+    ignore_warnings_on_schema_type: false
+    ingest_schemas_as_entities: false
+    meta_mapping: {}
+    topic_patterns:
+      ignoreCase: true
+      allow:
+        - .*
+      deny:
+        - "__.*" # Omit metadata topics
